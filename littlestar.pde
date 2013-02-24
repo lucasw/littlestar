@@ -65,6 +65,8 @@ class Background
         little_star[i].x = width;
         little_star[i].y = (int)random(height);
       }
+      
+      if (random(1000) < 990)
       little_star[i].draw();
     }
     

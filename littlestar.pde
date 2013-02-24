@@ -1,35 +1,61 @@
 
 
-
-class Star
+class Object
 {
+  float vx;
+  float vy;
+  
 int x;
 int y;
 
-PImage im;
+int wd;
+int ht;
 
 boolean limit_xy;
+  
+  void update()
+  {
+    x += vx;
+  y += vy;
+  vx *= 0.8;
+  vy *= 0.8;
+    
+  if (limit_xy) {
+  if (x < -wd/2) {
+     x = -wd/2; 
+  }
+  if (x > width - wd/2) {
+    x = width - wd/2; 
+  }
+  if (y < -ht/2) {
+    y = -ht/2; 
+  }
+  if (y > height - ht/2) {
+    y = height - ht/2; 
+  }
+  
+  }
+  
+  }// draw
+};
+
+class Star extends Object
+{
+
+PImage im;
 
 Star(String name, boolean do_limit_xy)
 {
   limit_xy = do_limit_xy;
   im = loadImage(name);
+  
+  wd = im.width;
+  ht = im.height;
 }
 
 void draw()
 {
-  if (star.x < -im.width/2) {
-    star.x = -im.width/2; 
-  }
-  if (star.x > width - im.width/2) {
-    star.x = width - im.width/2; 
-  }
-  if (star.y < -im.height/2) {
-    star.y = -im.height/2; 
-  }
-  if (star.y > height - im.height/2) {
-    star.y = height - im.height/2; 
-  }
+  update();
   
   image(im, x, y, im.width, im.height);
 }
@@ -39,6 +65,8 @@ void draw()
 class Background
 {
   Star[] little_star;
+  
+  Star[] houses;
   
   Background()
   {
@@ -54,10 +82,17 @@ class Background
       little_star[i].y = (int)random(height);
     }
     
+    houses = new Star[10];
+    
+    for (int i = 0; i < houses.length; i++) {
+      
+    }
+    
   }
   
   void draw()
   {
+    
     background(0,0,30);
     for (int i = 0; i < little_star.length; i++) { 
       little_star[i].x -= 1;
@@ -96,18 +131,19 @@ void setup()
 
 void keyPressed()
 {
+  float mv_size = 2;
   if (key == CODED) {
     if (keyCode == UP) {
-      star.y -= 8;
+      star.vy -= mv_size;
     } 
     else if (keyCode == DOWN) {
-      star.y += 8; 
+      star.vy += mv_size; 
     } 
     if (keyCode == LEFT) {
-      star.x -= 8; 
+      star.vx -= mv_size; 
     } 
     else if (keyCode == RIGHT) {
-      star.x += 8; 
+      star.vx += mv_size; 
     }
     
   }

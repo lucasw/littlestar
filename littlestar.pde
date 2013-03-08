@@ -73,19 +73,21 @@ class Background
     little_star = new Star[50];
     
     for (int i = 0; i < little_star.length; i++) {
-      if ( i < little_star.length*0.9)
+      //if ( i < little_star.length*0.9)
       little_star[i] = new Star("star_bg2_px.png", false);
-      else
-      little_star[i] = new Star("star_bg_px.png", false);
+      //else
+      //little_star[i] = new Star("star_bg_px.png", false);
       
       little_star[i].x = (int)random(width);
-      little_star[i].y = (int)random(height);
+      little_star[i].y = 8*(int)random(height/10);
     }
     
-    houses = new Star[10];
+    houses = new Star[5];
     
     for (int i = 0; i < houses.length; i++) {
-      
+      houses[i] = new Star("house_px.png", false);
+      houses[i].x = (int)random(width);
+      houses[i].y = 6*height/10;
     }
     
   }
@@ -103,6 +105,11 @@ class Background
       
       if (random(1000) < 990)
       little_star[i].draw();
+       
+    }
+    
+    for (int i = 0; i < houses.length; i++) { 
+    houses[i].draw();
     }
     
   }

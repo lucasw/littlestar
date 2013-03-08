@@ -5,33 +5,41 @@ class Object
   float vx;
   float vy;
   
-int x;
-int y;
+float x;
+float y;
 
 int wd;
 int ht;
 
+float friction;
+
 boolean limit_xy;
+
+float xlim_pos;
+float xlim_neg;
+float ylim_pos;
+float ylim_neg;
   
   void update()
   {
     x += vx;
   y += vy;
-  vx *= 0.8;
-  vy *= 0.8;
+  vx *= 1.0 - friction;
+  vy *= 1.0 - friction;
     
   if (limit_xy) {
-  if (x < -wd/2) {
-     x = -wd/2; 
+    
+  if (x < xlim_neg) {
+     x = xlim_neg; 
   }
-  if (x > width - wd/2) {
-    x = width - wd/2; 
+  if (x > xlim_pos) {
+    x = xlim_pos; 
   }
-  if (y < -ht/2) {
+  if (y < ylim_neg) {
     y = -ht/2; 
   }
-  if (y > height - ht/2) {
-    y = height - ht/2; 
+  if (y > ylim_pos) {
+    y = ylim_pos; 
   }
   
   }
@@ -51,7 +59,17 @@ Star(String name, boolean do_limit_xy)
   
   wd = im.width;
   ht = im.height;
+  
+   
+  ylim_pos = height - ht/2;
+  ylim_neg = -ht/2;
+  
+  xlim_pos = width - wd/2;
+  xlim_neg = -wd/2;
+  
 }
+
+
 
 void draw()
 {
@@ -70,7 +88,7 @@ class Background
   
   Background()
   {
-    little_star = new Star[50];
+    little_star = new Star[40];
     
     for (int i = 0; i < little_star.length; i++) {
       //if ( i < little_star.length*0.9)
@@ -78,15 +96,18 @@ class Background
       //else
       //little_star[i] = new Star("star_bg_px.png", false);
       
-      little_star[i].x = (int)random(width);
-      little_star[i].y = 8*(int)random(height/10);
+      little_star[i].x = random(width);
+      little_star[i].y = 7 * random(height/10);
+      
+      little_star[i].vx = -0.5;
     }
     
     houses = new Star[5];
     
     for (int i = 0; i < houses.length; i++) {
       houses[i] = new Star("house_px.png", false);
-      houses[i].x = (int)random(width);
+      houses[i].vx = -1.0;
+      houses[i].x = random(width);
       houses[i].y = 6*height/10;
     }
     
@@ -97,7 +118,7 @@ class Background
     
     background(0,0,30);
     for (int i = 0; i < little_star.length; i++) { 
-      little_star[i].x -= 1;
+      //little_star[i].x -= 1;
       if (little_star[i].x < -little_star[i].im.width) {
         little_star[i].x = width;
         little_star[i].y = (int)random(height);
@@ -117,6 +138,7 @@ class Background
 } // Background
 
 Star star;
+Star dog;
 Background background;
 
 //////////////////////////////////////
@@ -129,6 +151,13 @@ void setup()
   println(str(wd) + ' ' + str(ht)); 
 
   star = new Star("star_px.png", true);
+  star.friction = 0.2;
+  
+  dog = new Star("dog_px.png", true);
+  dog.friction = 0.3;
+  dog.ylim_neg = 5*height/10;
+  dog.y = dog.ylim_neg;
+  
   background = new Background();
   //    ((PGraphicsOpenGL)g).textureSampling(0);
   //hint(DISABLE_TEXTURE_MIPMAPS);
@@ -138,7 +167,7 @@ void setup()
 
 void keyPressed()
 {
-  float mv_size = 2;
+  float mv_size = 3;
   if (key == CODED) {
     if (keyCode == UP) {
       star.vy -= mv_size;
@@ -159,5 +188,8 @@ void draw()
 {
   background.draw();
   star.draw();
+  dog.draw();
+  
+  saveFrame("littlestar-####.png");
  
 }

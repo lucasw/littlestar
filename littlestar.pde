@@ -1,7 +1,11 @@
 
+float tm = 0;
 
 class Object
 {
+  float ax;
+  float ay;
+  
   float vx;
   float vy;
   
@@ -24,6 +28,12 @@ class Object
   {
     x += vx;
     y += vy;
+    vx += ax;
+    vy += ay;
+
+    ax = 0;
+    ay = 0;
+
     vx *= 1.0 - friction;
     vy *= 1.0 - friction;
 
@@ -47,12 +57,12 @@ class Object
   }// draw
 };
 
-class Star extends Object
+// TBD need animated version of this
+class Sprite extends Object
 {
-
   PImage im;
 
-  Star(String name, boolean do_limit_xy)
+  Sprite(String name, boolean do_limit_xy)
   {
     limit_xy = do_limit_xy;
     im = loadImage(name);
@@ -66,10 +76,7 @@ class Star extends Object
 
     xlim_pos = width - wd/2;
     xlim_neg = -wd/2;
-
   }
-
-
 
   void draw()
   {
@@ -82,19 +89,19 @@ class Star extends Object
 
 class Background
 {
-  Star[] little_star;
+  Sprite[] little_star;
 
-  Star[] houses;
+  Sprite[] houses;
 
   Background()
   {
-    little_star = new Star[40];
+    little_star = new Sprite[40];
 
     for (int i = 0; i < little_star.length; i++) {
       //if ( i < little_star.length*0.9)
-      little_star[i] = new Star("star_bg2_px.png", false);
+      little_star[i] = new Sprite("star_bg2_px.png", false);
       //else
-      //little_star[i] = new Star("star_bg_px.png", false);
+      //little_star[i] = new Sprite("star_bg_px.png", false);
 
       little_star[i].x = random(width);
       little_star[i].y = 7 * random(height/10);
@@ -102,10 +109,10 @@ class Background
       little_star[i].vx = -0.5;
     }
 
-    houses = new Star[5];
+    houses = new Sprite[5];
 
     for (int i = 0; i < houses.length; i++) {
-      houses[i] = new Star("house_px.png", false);
+      houses[i] = new Sprite("house_px.png", false);
       houses[i].vx = -1.0;
       houses[i].x = random(width);
       houses[i].y = 6*height/10;
@@ -137,9 +144,11 @@ class Background
 
 } // Background
 
-Star star;
-Star dog;
+Sprite star;
+Sprite dog;
 Background background;
+
+Sprite[] balloons;
 
 //////////////////////////////////////
 void setup()
@@ -150,13 +159,21 @@ void setup()
   int ht = height/4;
   println(str(wd) + ' ' + str(ht)); 
 
-  star = new Star("star_px.png", true);
+  star = new Sprite("star_px.png", true);
   star.friction = 0.2;
 
-  dog = new Star("dog_px.png", true);
+  dog = new Sprite("dog_px.png", true);
   dog.friction = 0.3;
   dog.ylim_neg = 5*height/10;
   dog.y = dog.ylim_neg;
+
+  balloons = new Sprite[40];
+  for (int i = 0; i < balloons.length; i++) {
+    balloons[i] = new Sprite("balloon_px.png", true);
+    balloons[i].friction = 0.1;
+    balloons[i].x = random(width);
+    balloons[i].y = random(7.0*height/10.0);
+  }
 
   background = new Background();
   //    ((PGraphicsOpenGL)g).textureSampling(0);
@@ -170,16 +187,16 @@ void keyPressed()
   float mv_size = 3;
   if (key == CODED) {
     if (keyCode == UP) {
-      star.vy -= mv_size;
+      star.ay -= mv_size;
     } 
     else if (keyCode == DOWN) {
-      star.vy += mv_size; 
+      star.ay += mv_size; 
     } 
     if (keyCode == LEFT) {
-      star.vx -= mv_size; 
+      star.ax -= mv_size; 
     } 
     else if (keyCode == RIGHT) {
-      star.vx += mv_size; 
+      star.ax += mv_size; 
     }
 
   }
@@ -187,9 +204,22 @@ void keyPressed()
 
 void draw()
 {
+  tm += 0.1;
+
   background.draw();
+  
+  for (int i = 0; i < balloons.length; i++) {
+    float fr2 = 0.9;
+    float fr = 0.1;
+    float off = 0.05;
+    balloons[i].ax += fr2 * (noise(balloons[i].x * fr, balloons[i].y * fr, tm) - 0.5 - off);
+    balloons[i].ay += fr2 * (noise(balloons[i].x * fr, balloons[i].y * fr, tm + 1000) - 0.5 - off);
+    balloons[i].draw();
+  }
+
   star.draw();
   dog.draw();
+
 
   //saveFrame("littlestar-####.png");
 

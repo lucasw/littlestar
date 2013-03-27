@@ -112,10 +112,12 @@ class Background
     houses = new Sprite[5];
 
     for (int i = 0; i < houses.length; i++) {
+      // TBD probably super inefficient for these all to point to 
+      // different images
       houses[i] = new Sprite("house_px.png", false);
       houses[i].vx = -1.0;
       houses[i].x = random(width);
-      houses[i].y = 6*height/10;
+      houses[i].y = height - houses[i].im.height - 30;
     }
 
   }
@@ -140,6 +142,11 @@ class Background
       houses[i].draw();
     }
 
+    // TBD make a 'ground' object
+    noStroke();
+    fill(25,28,51);
+    rect(0, height - 50, width, height);
+ 
   }
 
 } // Background
@@ -164,10 +171,10 @@ void setup()
 
   dog = new Sprite("dog_px.png", true);
   dog.friction = 0.3;
-  dog.ylim_neg = 5*height/10;
+  dog.ylim_neg = height - dog.im.height - 10;
   dog.y = dog.ylim_neg;
 
-  balloons = new Sprite[40];
+  balloons = new Sprite[20];
   for (int i = 0; i < balloons.length; i++) {
     balloons[i] = new Sprite("balloon_px.png", true);
     balloons[i].friction = 0.1;
@@ -185,6 +192,10 @@ void setup()
 void keyPressed()
 {
   float mv_size = 3;
+  
+  if (key == 'p') {
+    saveFrame("littlestar_screenshot_####.png");
+  }
   if (key == CODED) {
     if (keyCode == UP) {
       star.ay -= mv_size;

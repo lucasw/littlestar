@@ -1,7 +1,10 @@
 
 float tm = 0;
 
-class Object
+// make sprites 2x smaller
+int sc = 2;
+
+class Movable
 {
   float ax;
   float ay;
@@ -18,6 +21,7 @@ class Object
   float friction;
 
   boolean limit_xy;
+  boolean lock_vx;
 
   float xlim_pos;
   float xlim_neg;
@@ -28,15 +32,18 @@ class Object
   {
     x += vx;
     y += vy;
-    vx += ax;
+
+    if (!lock_vx) {
+      vx += ax;
+      vx *= 1.0 - friction;
+    }
+
     vy += ay;
+    vy *= 1.0 - friction;
 
     ax = 0;
     ay = 0;
-
-    vx *= 1.0 - friction;
-    vy *= 1.0 - friction;
-
+    
     if (limit_xy) {
 
       if (x < xlim_neg) {
@@ -54,17 +61,18 @@ class Object
 
     }
   
-  }// draw
+  }// update
 };
 
 // TBD need animated version of this
-class Sprite extends Object
+class Sprite extends Movable
 {
   PImage im;
 
   Sprite(String name, boolean do_limit_xy)
   {
     limit_xy = do_limit_xy;
+    lock_vx = false;
     im = loadImage(name);
 
     wd = im.width;
@@ -82,10 +90,116 @@ class Sprite extends Object
   {
     update();
 
-    image(im, x, y, im.width, im.height);
+    image(im, x, y, im.width/sc, im.height/sc);
   }
 
 };
+
+/* any number of objects with the same PImage/s
+*/
+class SpriteCollection
+{
+  PImage im;
+
+  ArrayList movables;
+
+  SpriteCollection(String file_name)
+  {
+    setImage(file_name);
+  }
+
+  void setImage(String file_name) 
+  {
+    movables = new ArrayList(); 
+    im = loadImage(file_name);
+  }
+
+  void draw()
+  { 
+    imageMode(CENTER);
+    for (int i = 0; i < movables.size(); i++) {
+      Movable spr = (Movable)movables.get(i);
+      spr.update();
+
+      image(im, spr.x, spr.y, im.width/sc, im.height/sc);
+    }
+  }
+}
+
+/* Things that can be collected by players
+*/
+class Collectables extends SpriteCollection
+{
+  
+  Collectables(String file_name)
+  {
+    super(file_name);
+  }
+
+  /// TBD add some collision handling code
+}
+
+class Balloons extends Collectables
+{
+  
+  Balloons(String file_name) 
+  {
+    super(file_name);
+
+    init();
+  }
+
+  // first level
+  void init() 
+  {
+
+    /**
+      twinkle twinkle little star notes
+      */
+    String notes = 
+        "CC GG AA G " 
+      + "FF EE DD C " 
+      + "GG FF EE D "
+      + "GG FF EE D "
+      + "CC GG AA G "
+      + "FF EE DD C";
+
+    int x = width/2;
+    for (int i = 0; i < notes.length(); i++) {
+      char c = notes.charAt(i);
+      
+      if ((c >= 'A') && (c <= 'G')) {
+        int note = c - 'A';
+        Movable spr = new Movable();
+        spr.friction = 0.3;
+
+        spr.x = x;
+        // note determines y coordinate 
+        spr.y = (note) * height/10.0 - 40;
+        println(c + " " + str(note) + " " + str(spr.x) + " " + str(spr.y));
+        spr.vx = -3;
+        spr.lock_vx = true;
+        movables.add(spr);
+      } else {
+        println(c + " blank");
+      }
+
+      x += 40;
+    }
+
+  }
+/*
+for (int i = 0; i < balloons.length; i++) {
+    float fr2 = 0.9;
+    float fr = 0.1;
+    float off = 0.05;
+    balloons[i].ax += fr2 * (noise(balloons[i].x * fr, balloons[i].y * fr, tm) - 0.5 - off);
+    balloons[i].ay += fr2 * (noise(balloons[i].x * fr, balloons[i].y * fr, tm + 1000) - 0.5 - off);
+    balloons[i].draw();
+  }
+*/
+
+}
 
 class Background
 {
@@ -112,12 +226,10 @@ class Background
     houses = new Sprite[5];
 
     for (int i = 0; i < houses.length; i++) {
-      // TBD probably super inefficient for these all to point to 
-      // different images
       houses[i] = new Sprite("house_px.png", false);
       houses[i].vx = -1.0;
       houses[i].x = random(width);
-      houses[i].y = height - houses[i].im.height - 30;
+      houses[i].y = 6*height/10;
     }
 
   }
@@ -142,11 +254,6 @@ class Background
       houses[i].draw();
     }
 
-    // TBD make a 'ground' object
-    noStroke();
-    fill(25,28,51);
-    rect(0, height - 50, width, height);
- 
   }
 
 } // Background
@@ -155,15 +262,15 @@ Sprite star;
 Sprite dog;
 Background background;
 
-Sprite[] balloons;
+Balloons balloons;
 
 //////////////////////////////////////
 void setup()
 {
   size(1280, 720);
   //size(640, 360); //, P3D);
-  int wd = width/4;
-  int ht = height/4;
+  int wd = width/2;
+  int ht = height/2;
   println(str(wd) + ' ' + str(ht)); 
 
   star = new Sprite("star_px.png", true);
@@ -171,16 +278,10 @@ void setup()
 
   dog = new Sprite("dog_px.png", true);
   dog.friction = 0.3;
-  dog.ylim_neg = height - dog.im.height - 10;
+  dog.ylim_neg = 5*height/10;
   dog.y = dog.ylim_neg;
 
-  balloons = new Sprite[20];
-  for (int i = 0; i < balloons.length; i++) {
-    balloons[i] = new Sprite("balloon_px.png", true);
-    balloons[i].friction = 0.1;
-    balloons[i].x = random(width);
-    balloons[i].y = random(7.0*height/10.0);
-  }
+  balloons = new Balloons("balloon_px.png");
 
   background = new Background();
   //    ((PGraphicsOpenGL)g).textureSampling(0);
@@ -192,10 +293,6 @@ void setup()
 void keyPressed()
 {
   float mv_size = 3;
-  
-  if (key == 'p') {
-    saveFrame("littlestar_screenshot_####.png");
-  }
   if (key == CODED) {
     if (keyCode == UP) {
       star.ay -= mv_size;
@@ -218,16 +315,8 @@ void draw()
   tm += 0.1;
 
   background.draw();
-  
-  for (int i = 0; i < balloons.length; i++) {
-    float fr2 = 0.9;
-    float fr = 0.1;
-    float off = 0.05;
-    balloons[i].ax += fr2 * (noise(balloons[i].x * fr, balloons[i].y * fr, tm) - 0.5 - off);
-    balloons[i].ay += fr2 * (noise(balloons[i].x * fr, balloons[i].y * fr, tm + 1000) - 0.5 - off);
-    balloons[i].draw();
-  }
-
+ 
+  balloons.draw();
   star.draw();
   dog.draw();
 

@@ -109,12 +109,54 @@ class StarPlayer extends Sprite
 {
   int score; 
 
-  StarPlayer()
+  StarPlayer(String name)
   {
-    super("star_px.png", true);
+    super(name, true);
+
+    dir_cmd = new DirectionCommands();
   }
+ 
+  DirectionCommands dir_cmd;
+  float mv_size = 5;
   
-  
+  void handleDirCommands()
+  {
+    // handle multiple key presses
+    if (dir_cmd.key_up && dir_cmd.key_down) {
+      rect(10, 10, 10, 30);
+      if (dir_cmd.most_recent_vert > 0) {
+        ay -= mv_size; 
+      } else {
+        ay += mv_size; 
+      }
+    } else if (dir_cmd.key_up) {
+      rect(10, 0, 10, 30);
+      ay -= mv_size; 
+    } else if (dir_cmd.key_down) {
+      rect(10, 20, 10,10);
+      ay += mv_size; 
+    }
+
+    if (dir_cmd.key_left && dir_cmd.key_right) {
+      if (dir_cmd.most_recent_horiz > 0) {
+        ax += mv_size * 0.5; 
+      } else {
+        // TBD make this a function of forward velocity
+        ax -= mv_size * 1.5; 
+      }
+    } else if (dir_cmd.key_right) {
+      ax += mv_size; 
+    } else if (dir_cmd.key_left) {
+      ax -= mv_size; 
+    }
+  }
+
+  void draw()
+  {
+    handleDirCommands();
+    super.draw();
+  }
+
   void collided(Movable spr) 
   { 
     super.collided(spr);
@@ -370,7 +412,7 @@ class Background
 } // Background
 
 StarPlayer star_player;
-Sprite dog;
+StarPlayer dog;
 Background background;
 
 Balloons balloons;
@@ -384,17 +426,18 @@ void setup()
   int ht = height/2;
   println(str(wd) + ' ' + str(ht)); 
 
-  star_player = new StarPlayer();
+  star_player = new StarPlayer("star_px.png");
   star_player.friction = 0.2;
   star_player.x = 100;
   star_player.y = 100;
   star_player.ylim_pos = 6*height/10;
 
-  dog = new Sprite("dog_px.png", true);
-  dog.friction = 0.3;
-  dog.ylim_neg = 8*height/10;
-  dog.ylim_pos = height;
-  dog.y = dog.ylim_neg;
+  dog = new StarPlayer("dog_px.png");
+  dog.mv_size = 26.0;
+  dog.friction = 0.8;
+  dog.ylim_neg = 7*height/10;
+  dog.ylim_pos = height - 50;
+  dog.y = dog.ylim_neg + 100;
 
   balloons = new Balloons("balloon_px.png");
 
@@ -405,6 +448,8 @@ void setup()
   frameRate(15);
 }
 
+class DirectionCommands {
+
 boolean key_up = false;
 boolean key_down = false;
 // 1 = positive, 0 = nothing, -1 = negative
@@ -412,49 +457,84 @@ int most_recent_vert = 0;
 int most_recent_horiz = 0;
 boolean key_left = false;
 boolean key_right = false;
+}
 
 void keyPressed()
 {
   if (key == CODED) {
     if (keyCode == UP) {
-      key_up = true;
-      most_recent_vert = 1;
+      star_player.dir_cmd.key_up = true;
+      star_player.dir_cmd.most_recent_vert = 1;
     } 
     if (keyCode == DOWN) {
-      key_down = true;
-      most_recent_vert = -1;
+      star_player.dir_cmd.key_down = true;
+      star_player.dir_cmd.most_recent_vert = -1;
     } 
     if (keyCode == LEFT) {
-      key_left = true;
-      most_recent_horiz = -1;
+      star_player.dir_cmd.key_left = true;
+      star_player.dir_cmd.most_recent_horiz = -1;
     } 
     if (keyCode == RIGHT) {
-      key_right = true;
-      most_recent_horiz = 1;
+      star_player.dir_cmd.key_right = true;
+      star_player.dir_cmd.most_recent_horiz = 1;
     }
 
   }
+
+  if (key == 'w') {
+      dog.dir_cmd.key_up = true;
+      dog.dir_cmd.most_recent_vert = 1;
+    } 
+    if (key == 's') {
+      dog.dir_cmd.key_down = true;
+      dog.dir_cmd.most_recent_vert = -1;
+    } 
+    if (key == 'a') {
+      dog.dir_cmd.key_left = true;
+      dog.dir_cmd.most_recent_horiz = -1;
+    } 
+    if (key == 'd') {
+      dog.dir_cmd.key_right = true;
+      dog.dir_cmd.most_recent_horiz = 1;
+    }
+
+
 }
 
 void keyReleased()
 {
   if (key == CODED) {
     if (keyCode == UP) {
-      key_up = false;
+      star_player.dir_cmd.key_up = false;
     } 
     
     if (keyCode == DOWN) {
-      key_down = false;
+      star_player.dir_cmd.key_down = false;
     } 
     if (keyCode == LEFT) {
-      key_left = false;
+      star_player.dir_cmd.key_left = false;
     } 
     
     if (keyCode == RIGHT) {
-      key_right = false;
+      star_player.dir_cmd.key_right = false;
     }
 
   }
+  
+  if (key == 'w') {
+      dog.dir_cmd.key_up = false;
+    } 
+    
+    if (key == 's') {
+      dog.dir_cmd.key_down = false;
+    } 
+    if (key == 'a') {
+      dog.dir_cmd.key_left = false;
+    } 
+    
+    if (key == 'd') {
+      dog.dir_cmd.key_right = false;
+    }
 }
 
 void drawAll()
@@ -469,39 +549,6 @@ void draw()
 {
   
   tm += 0.1;
-
-
-  {
-    // handle multiple key presses
-    final float mv_size = 5;
-    if (key_up && key_down) {
-      rect(10, 10, 10, 30);
-      if (most_recent_vert > 0) {
-        star_player.ay -= mv_size; 
-      } else {
-        star_player.ay += mv_size; 
-      }
-    } else if (key_up) {
-      rect(10, 0, 10, 30);
-      star_player.ay -= mv_size; 
-    } else if (key_down) {
-      rect(10, 20, 10,10);
-      star_player.ay += mv_size; 
-    }
-
-    if (key_left && key_right) {
-      if (most_recent_horiz > 0) {
-        star_player.ax += mv_size * 0.5; 
-      } else {
-        // TBD make this a function of forward velocity
-        star_player.ax -= mv_size * 1.5; 
-      }
-    } else if (key_right) {
-      star_player.ax += mv_size; 
-    } else if (key_left) {
-      star_player.ax -= mv_size; 
-    }
-  }
  
   balloons.collisionTest(star_player); 
   drawAll();

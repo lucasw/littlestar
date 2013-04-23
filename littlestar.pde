@@ -87,8 +87,8 @@ class Sprite extends Movable
     xlim_neg = wd/2;
     xlim_pos = width - wd/2;
     
-    ylim_neg = ht/2;
-    ylim_pos = height - ht/2;
+    ylim_neg = ht/4;
+    ylim_pos = height - ht/4;
   }
 
   void draw()
@@ -208,9 +208,41 @@ class Balloons extends Collectables
   }
 
   // first level
+  
   void init() 
   {
 
+    PImage level = loadImage("level1.png");
+
+    // image is made into square, need to spread it out
+    final int m_ht = 8;
+    level.loadPixels();
+    for (int y = 0; y < m_ht; y++) {
+      for (int x = 0; x < level.width*(level.height/m_ht); x++) {
+        
+        final int im_x = x % level.width;
+        final int im_y = x/m_ht + y;
+        final int ind = im_y * level.width + im_x; 
+        if (level.pixels[ind] == color(255, 255, 255)) {
+          Movable spr = new Movable();
+          spr.friction = 0.0;
+
+          spr.x = width/2 + x * 80;
+          // note determines y coordinate 
+          spr.y = y * height/9.0 + 20;
+          //println(c + " " + str(note) + " " + str(spr.x) + " " + str(spr.y));
+          spr.vx = -6;
+          spr.lock_vx = true;
+          movables.add(spr);
+        } 
+
+
+      }
+      println("total balloons " + str(movables.size()) );
+    }
+
+    if (false) {
+       
     /**
       twinkle twinkle little star notes
       */
@@ -243,6 +275,7 @@ class Balloons extends Collectables
       }
 
       x += 40;
+    }
     }
 
   }

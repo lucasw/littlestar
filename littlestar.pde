@@ -84,8 +84,8 @@ class Sprite extends Movable
     wd = im.width;
     ht = im.height;
 
-    xlim_neg = wd/2;
-    xlim_pos = width - wd/2;
+    xlim_neg = wd/4;
+    xlim_pos = width - wd/4;
     
     ylim_neg = ht/4;
     ylim_pos = height - ht/4;
@@ -165,7 +165,8 @@ class Collectables extends SpriteCollection
     super(file_name);
   }
 
-  /// TBD add some collision handling code
+  int missed = 0;
+
   boolean collisionTest(Sprite test) 
   { 
 
@@ -181,13 +182,26 @@ class Collectables extends SpriteCollection
 
         collide(test, spr, i);
       }
-    }  
+
+      // TBD does this belong here?
+      if ( spr.x < -10 ) {
+        missed++;
+        rv = true;
+        movables.remove(i);
+      }
+
+    } 
+   
+    if (rv) {
+      println("missed " + str(missed) + ", remaining " + str(movables.size()) );
+    }
+
     return rv;
   } // collisionTest
 
   void collide(Movable test, Movable spr, int i) 
   {
-    test.collided(spr); 
+    test.collided(spr);
     movables.remove(i);
   }
 }
@@ -208,13 +222,14 @@ class Balloons extends Collectables
   }
 
   // first level
-  
+  //int x_level_end = 
+
   void init() 
   {
 
     PImage level = loadImage("level1.png");
 
-    // image is made into square, need to spread it out
+    // image is tiled into square, need to spread it out
     final int m_ht = 8;
     level.loadPixels();
     for (int y = 0; y < m_ht; y++) {
@@ -227,19 +242,19 @@ class Balloons extends Collectables
           Movable spr = new Movable();
           spr.friction = 0.0;
 
-          spr.x = width/2 + x * 80;
+          spr.x = width/2 + x * 60;
           // note determines y coordinate 
-          spr.y = y * height/9.0 + 20;
+          spr.y = y * height/12.0 + 40;
           //println(c + " " + str(note) + " " + str(spr.x) + " " + str(spr.y));
-          spr.vx = -6;
+          spr.vx = -3;
           spr.lock_vx = true;
           movables.add(spr);
         } 
 
 
       }
-      println("total balloons " + str(movables.size()) );
     }
+    println("total balloons " + str(movables.size()) );
 
     if (false) {
        
@@ -314,13 +329,15 @@ class Background
       little_star[i].vx = -0.5;
     }
 
-    houses = new Sprite[5];
-
+    houses = new Sprite[25];
+    
+    float last_x = 0;
     for (int i = 0; i < houses.length; i++) {
       houses[i] = new Sprite("house_px.png", false);
       houses[i].vx = -1.0;
-      houses[i].x = random(width);
-      houses[i].y = 6*height/10;
+      houses[i].x = random(300) + last_x;
+      last_x = houses[i].x;
+      houses[i].y = 7*height/10 - houses[i].im.height/4+ 8;
     }
 
   }
@@ -329,6 +346,7 @@ class Background
   {
 
     background(0,0,30);
+
     for (int i = 0; i < little_star.length; i++) { 
       //little_star[i].x -= 1;
       if (little_star[i].x < -little_star[i].im.width) {
@@ -344,7 +362,9 @@ class Background
     for (int i = 0; i < houses.length; i++) { 
       houses[i].draw();
     }
-
+    
+    fill(0,50,0);
+    rect(0, 7 * height / 10, width, 3 * height / 10);
   }
 
 } // Background
@@ -368,10 +388,12 @@ void setup()
   star_player.friction = 0.2;
   star_player.x = 100;
   star_player.y = 100;
+  star_player.ylim_pos = 6*height/10;
 
   dog = new Sprite("dog_px.png", true);
   dog.friction = 0.3;
-  dog.ylim_neg = 5*height/10;
+  dog.ylim_neg = 8*height/10;
+  dog.ylim_pos = height;
   dog.y = dog.ylim_neg;
 
   balloons = new Balloons("balloon_px.png");

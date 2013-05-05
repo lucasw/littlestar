@@ -177,8 +177,14 @@ class StarPlayer extends Sprite
     score += spr.value;
     
     if (spr.value < 0) {
-      ax -= 30;
-      x -= 20;
+      float fx = ((vx > 0) ? 1 : -1);
+      float fy = ((vy > 0) ? 1 : -1);
+      
+      ax -= 30 * fx;
+      x  -= 10 * fx;
+      
+      ay -= 10 * fy;
+      y  -= 5 * fy;
     }
   }
 };

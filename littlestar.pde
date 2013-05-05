@@ -1,4 +1,11 @@
 
+StarPlayer star_player;
+StarPlayer dog;
+Background background;
+
+Balloons balloons;
+Collectables clouds;
+
 PFont font;
 
 float tm = 0;
@@ -19,6 +26,10 @@ class Movable
 
   int wd;
   int ht;
+
+  // value to player if encountered- positive is good and adds to score
+  // negative reduces score and is bad.
+  int value;
 
   float friction;
 
@@ -163,8 +174,12 @@ class StarPlayer extends Sprite
   { 
     super.collided(spr);
 
-    score += 1;
-    //println("score " + str(score));
+    score += spr.value;
+    
+    if (spr.value < 0) {
+      ax -= 30;
+      x -= 20;
+    }
   }
 };
 
@@ -250,14 +265,13 @@ class Collectables extends SpriteCollection
   }
 }
 
+// TBD doesn't have anything over parent class currently
 class Balloons extends Collectables
 {
   
   Balloons(String file_name) 
   {
     super(file_name);
-
-    init();
   }
 
   void collide(Movable test, Movable spr, int i) 
@@ -268,10 +282,15 @@ class Balloons extends Collectables
   // first level
   //int x_level_end = 
 
-  void init() 
+
+}
+
+class Level
+{
+  void init(String filename, Balloons balloons, Collectables clouds) 
   {
 
-    PImage level = loadImage("level1.png");
+    PImage level = loadImage(filename); //"level1.png");
 
     // image is tiled into square, need to spread it out
     final int m_ht = 8;
@@ -281,24 +300,41 @@ class Balloons extends Collectables
         
         final int im_x = x % level.width;
         final int im_y = x/m_ht + y;
-        final int ind = im_y * level.width + im_x; 
+        final int ind = im_y * level.width + im_x;
+
+        final float spr_x = width/2 + x * 60;
+        final float spr_y = y * height/12.0 + 40;
         if (level.pixels[ind] == color(255, 255, 255)) {
           Movable spr = new Movable();
           spr.friction = 0.0;
 
-          spr.x = width/2 + x * 60;
+          spr.x = spr_x;
           // note determines y coordinate 
-          spr.y = y * height/12.0 + 40;
+          spr.y = spr_y;
           //println(c + " " + str(note) + " " + str(spr.x) + " " + str(spr.y));
-          spr.vx = -3;
+          spr.vx = -6;
           spr.lock_vx = true;
-          movables.add(spr);
+          spr.value = 1;
+          balloons.movables.add(spr);
         } 
+        else if (level.pixels[ind] == color(0, 0, 0)) {
+          Movable spr = new Movable();
+          spr.friction = 0.0;
 
+          spr.x = spr_x;
+          // note determines y coordinate 
+          spr.y = spr_y;
+          //println(c + " " + str(note) + " " + str(spr.x) + " " + str(spr.y));
+          spr.vx = -6;
+          spr.lock_vx = true;
+          spr.value = -5;
+          clouds.movables.add(spr);
+        }
 
       }
     }
-    println("total balloons " + str(movables.size()) );
+    println("total balloons " + str(balloons.movables.size()) );
+    println("total clouds " + str(clouds.movables.size()) );
 
     if (false) {
        
@@ -328,7 +364,7 @@ class Balloons extends Collectables
         //println(c + " " + str(note) + " " + str(spr.x) + " " + str(spr.y));
         spr.vx = -3;
         spr.lock_vx = true;
-        movables.add(spr);
+        balloons.movables.add(spr);
       } else {
         //println(c + " blank");
       }
@@ -350,6 +386,8 @@ for (int i = 0; i < balloons.length; i++) {
 */
 
 }
+
+
 
 class Background
 {
@@ -413,11 +451,6 @@ class Background
 
 } // Background
 
-StarPlayer star_player;
-StarPlayer dog;
-Background background;
-
-Balloons balloons;
 
 //////////////////////////////////////
 void setup()
@@ -442,6 +475,10 @@ void setup()
   dog.y = dog.ylim_neg + 100;
 
   balloons = new Balloons("balloon_px.png");
+  clouds = new Collectables("bad_cloud_px.png");  
+
+  Level level = new Level();
+  level.init("level1.png", balloons, clouds);
 
   background = new Background();
   //    ((PGraphicsOpenGL)g).textureSampling(0);
@@ -543,25 +580,55 @@ void keyReleased()
     }
 }
 
+int count = 0;
 void drawAll()
 {
   background.draw();
   balloons.draw();
   star_player.draw();
-  //clouds.draw();
+  clouds.draw();
   dog.draw();
 
   textFont(font);
   textSize(32);
   fill(255);
-  String msg = str(star_player.score);
-  if (star_player.score < 10) {
+
+  {
+    int score = star_player.score;
+    boolean sign = score >= 0;
+    if (!sign) score = -score;
+
+  String msg = str(score);
+  if (score < 10) {
     msg = "00" + msg;
   }
-  else if (star_player.score < 100) {
+  else if (score < 100) {
     msg = "0" + msg;
   }
+
+  if (sign) {
+    msg = "+" + msg;
+  } else {
+    msg = "-" + msg;
+  }
+
   text(msg, 10, 30);
+  
+  if ((count < 25) &&
+    (count % 4 < 2)) {
+    textSize(128);
+    text("GET READY", width/4, height/2);
+  }
+
+  if ((balloons.movables.size()== 0) && (clouds.movables.size() == 0) &&
+    (count % 2 == 0)) {
+    textSize(128);
+    text("LEVEL COMPLETE", width/4, height/2);
+  }
+
+  }
+
+  count++;
 }
 
 void draw()
@@ -570,6 +637,7 @@ void draw()
   tm += 0.1;
  
   balloons.collisionTest(star_player); 
+  clouds.collisionTest(star_player); 
   drawAll();
 
   //saveFrame("littlestar-####.png");

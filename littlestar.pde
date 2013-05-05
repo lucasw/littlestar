@@ -1,4 +1,6 @@
 
+PFont font;
+
 float tm = 0;
 
 // make sprites 2x smaller
@@ -162,7 +164,7 @@ class StarPlayer extends Sprite
     super.collided(spr);
 
     score += 1;
-    println("score " + str(score));
+    //println("score " + str(score));
   }
 };
 
@@ -445,6 +447,10 @@ void setup()
   //    ((PGraphicsOpenGL)g).textureSampling(0);
   //hint(DISABLE_TEXTURE_MIPMAPS);
 
+  // Comic Sans MS Bold
+  font = createFont("Courier 10 Pitch Italic", 4, false);
+  
+  //println(PFont.list());
   frameRate(15);
 }
 
@@ -542,7 +548,20 @@ void drawAll()
   background.draw();
   balloons.draw();
   star_player.draw();
+  //clouds.draw();
   dog.draw();
+
+  textFont(font);
+  textSize(32);
+  fill(255);
+  String msg = str(star_player.score);
+  if (star_player.score < 10) {
+    msg = "00" + msg;
+  }
+  else if (star_player.score < 100) {
+    msg = "0" + msg;
+  }
+  text(msg, 10, 30);
 }
 
 void draw()
